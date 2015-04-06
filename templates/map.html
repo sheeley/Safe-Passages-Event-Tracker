@@ -1,9 +1,8 @@
 <style type="text/css">
     #map-canvas {
         width: 100%;
-        height: 100%;
         background: #000;
-        min-height: 500px;
+        height: 200px;
     }
 
     .container {
@@ -17,7 +16,8 @@
 </div>
 <div class="row"><div class="col-md-12"><br/></div></div>
 <div class="row"><div class="col-md-12">
-<!--     <form>
+    <div id="map-canvas"></div>
+    <form>
         <div class="form-group">
             <label for="contact">Name/Email</label>
             <input type="email" class="form-control" id="contact" placeholder="Enter email/name">
@@ -42,8 +42,7 @@
             <label for="end">Ending Point</label>
             <input type="text" class="form-control" id="end">
         </div>
-    </form> -->
-    <div id="map-canvas"></div>
+    </form>
 </div></div>
 <script src="https://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed&key={{key}}"></script>
 <script src="static/map.js"></script>
