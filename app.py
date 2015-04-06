@@ -8,12 +8,15 @@ def render(content):
 
 @app.route("/")
 def add():
-    content = render_template("map.html")
+    key = "AIzaSyAF_o9iMtsGlET7yYVhAWoLFsRGBU9ge4o"
+    content = render_template("map.html", key=key)
     return render(content)
+
 
 @app.route("/save")
 def save():
     pass
+
 
 @app.route("/list")
 def list_existing():

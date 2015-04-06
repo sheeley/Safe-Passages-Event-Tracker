@@ -21,7 +21,7 @@ $(document).ready(function(){
             center: latlng,
             scrollWheel: false,
             zoom: 16,
-            draggable: false,
+            draggable: true,
             scrollwheel: false
         };
 
