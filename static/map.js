@@ -13,7 +13,7 @@ $(document).ready(function(){
     google.maps.event.addDomListener(window, 'load', initialize);
 
     function initialize() {
-        var latlng = new google.maps.LatLng(37.782047, -122.414782);
+        var latlng = new google.maps.LatLng(37.783997, -122.412722);
 
         var mapOptions = {
             disableDefaultUI: true,
