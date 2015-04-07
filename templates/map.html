@@ -1,48 +1,102 @@
-<style type="text/css">
-    #map-canvas {
-        width: 100%;
-        background: #000;
-        height: 200px;
-    }
+<div ng-app="mapApp" ng-controller="MapCtrl">
+    <style type="text/css">
+        #map-canvas {
+            width: 100%;
+            background: #000;
+            min-height: 200px;
+            height:100%;
+        }
 
-    .container {
-        height: 100%;
-    }
-</style>
-<div class="row"><div class="col-md-12"><h1>Log Event</h1></div></div>
-<div class="row">
-    <div class="col-md-8"><p>Tap the map to log an event.</p></div>
-    <div class="col-md-4"><p><button class="btn pull-right">Save</button></p></div>
+        .container {
+            height: 100%;
+        }
+
+        .labels {
+            color: red;
+            background-color: white;
+            font-family: "Lucida Grande", "Arial", sans-serif;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            width: 20px;
+            border: 1px solid black;
+            white-space: nowrap;
+        }
+    </style>
+    <div class="row"><div class="col-md-12"><h1>Log</h1></div></div>
+    <div class="row">
+        <div class="col-md-8"><p>Tap the map to log events.</p></div>
+        <div class="col-md-4"><p><button class="btn pull-right">Save</button></p></div>
+    </div>
+    <div class="row"><div class="col-md-12"><br/></div></div>
+    <div class="row">
+        <div class="col-md-6"><div id="map-canvas"></div></div>
+        <div class="col-md-6">
+            <form>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Marker #</th>
+                            <th>Type</th>
+                            <th># of People</th>
+                            <th>Notes</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="marker in markers">
+                            <td>
+                                {[{marker.labelContent}]}
+                                <input type="hidden" name="pos[{[{marker.labelContent}]}]" value="{[{marker.position}]}"/>
+
+                            </td>
+                            <td>
+                                <select class="form-control" name="type[{[{marker.labelContent}]}]">
+                                    <option value="D">D (drug use, sales, paraphenalia)</option>
+                                    <option value="E">E (fighting, bullying, yelling, public disturbance)</option>
+                                    <option value="H">H (harassment, cat-calling, sexual solicitations)</option>
+                                    <option value="L">L (loitering, individual blocking sidewalk, please include # of people)</option>
+                                    <option value="P">P (feces, urine, vomit)</option>
+                                    <option value="V">V (violence, weapons, threat of violence)</option>
+                                    <option value="T">T (traffic violations or unsafe driving)</option>
+                                    <option value="X">X (police presence or activity)</option>
+                                    <option value="O">O (other, please add comment)</option>
+                                </select>
+                            </td>
+                            <td><input type="number" name="people[{[{marker.labelContent}]}]"/></td>
+                            <td><input type="text" name="comment[{[{marker.labelContent}]}]"/></td>
+                            <td><a ng-click="removeMarker(marker)">Remove</a>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="form-group">
+                    <label for="contact">Name/Email</label>
+                    <input type="email" class="form-control" id="contact" placeholder="Enter email/name">
+                </div>
+
+                <div class="form-group">
+                    <label for="conditions">Weather/Notable Conditions</label>
+                    <input type="text" class="form-control" id="conditions">
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date &amp; Time</label>
+                    <input type="datetime-local" class="form-control" id="date" value="{{date}}">
+                </div>
+
+                <div class="form-group">
+                    <label for="start">Starting Point</label>
+                    <input type="text" class="form-control" id="start">
+                </div>
+
+                <div class="form-group">
+                    <label for="end">Ending Point</label>
+                    <input type="text" class="form-control" id="end">
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed&key={{key}}"></script>
+    <script src="http://google-maps-utility-library-v3.googlecode.com/svn/tags/markerwithlabel/1.1.9/src/markerwithlabel.js"></script>
+    <script src="static/map.js"></script>
 </div>
-<div class="row"><div class="col-md-12"><br/></div></div>
-<div class="row"><div class="col-md-12">
-    <div id="map-canvas"></div>
-    <form>
-        <div class="form-group">
-            <label for="contact">Name/Email</label>
-            <input type="email" class="form-control" id="contact" placeholder="Enter email/name">
-        </div>
-
-        <div class="form-group">
-            <label for="conditions">Weather/Notable Conditions</label>
-            <input type="text" class="form-control" id="conditions" placeholder="Rain/wet/">
-        </div>
-
-        <div class="form-group">
-            <label for="date">Date &amp; Time</label>
-            <input type="datetime" class="form-control" id="date">
-        </div>
-
-        <div class="form-group">
-            <label for="start">Starting Point</label>
-            <input type="text" class="form-control" id="start">
-        </div>
-
-        <div class="form-group">
-            <label for="end">Ending Point</label>
-            <input type="text" class="form-control" id="end">
-        </div>
-    </form>
-</div></div>
-<script src="https://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed&key={{key}}"></script>
-<script src="static/map.js"></script>

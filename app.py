@@ -1,4 +1,6 @@
 from flask import Flask, render_template
+from datetime import datetime
+
 app = Flask(__name__)
 
 
@@ -9,7 +11,8 @@ def render(content):
 @app.route("/")
 def add():
     key = "AIzaSyAF_o9iMtsGlET7yYVhAWoLFsRGBU9ge4o"
-    content = render_template("map.html", key=key)
+    date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    content = render_template("map.html", key=key, date=date)
     return render(content)
 
 
