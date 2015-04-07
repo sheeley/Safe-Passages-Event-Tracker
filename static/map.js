@@ -3,8 +3,11 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
     $interpolateProvider.endSymbol('}]}');
 }).controller('MapCtrl', function ($scope) {
     $scope.map = null;
-    $scope.markers = [];
     $scope.label = 1;
+
+    $scope.markers = [];
+    $scope.email = $scope.conditions = $scope.starting = $scope.ending = null;
+    $scope.date = new Date();
 
     $scope.addEvent = function addEvent(sq){
         $scope.markers.push(new MarkerWithLabel({
@@ -52,6 +55,86 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
         $scope.map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
         google.maps.event.addListener($scope.map, 'click', $scope.addEvent);
     };
+
+    $scope.getValidationMessages = function getValidationMessages(){
+        var messages = [];
+        if($scope.markers.length == 0){
+            messages.push("add markers");
+        } else {
+            for (var i = $scope.markers.length - 1; i >= 0; i--) {
+                if(!$scope.markers[i].type){
+                    messages.push("select a type for each marker");
+                }
+            };
+        }
+
+        if(!$scope.email){
+            messages.push("include your email address");
+        }
+
+        if(messages.length){
+            return "Please " + messages.join(" and ") + " before submitting.";
+        }
+        return null;
+    };
+
+    $scope.getMarkersForSubmit = function getMarkersForSubmit(){
+        var markers = [];
+        for (var i = $scope.markers.length - 1; i >= 0; i--) {
+            var marker = $scope.markers[i];
+            markers.push({
+                k: marker.position.k,
+                d: marker.position.D,
+                type: marker.type,
+                comment: marker.comment
+            });
+        };
+        return markers;
+    };
+
+    $scope.submit = function submit(){
+        var payload = {
+            email: $scope.email,
+            conditions: $scope.conditions,
+            starting: $scope.starting,
+            ending: $scope.ending,
+            date: $scope.date,
+            events: $scope.getMarkersForSubmit()
+        }
+
+        $.post("/save", payload, function(data){
+            if(data && data.success){
+                for (var i = $scope.markers.length - 1; i >= 0; i--) {
+                    $scope.markers[i].setMap(null);
+                };
+                $scope.markers = [];
+                $scope.label = 1;
+                $scope.showMessage("Saved!", "bg-success", true);
+            } else {
+                message = (data && data.message) ? data.message : "";
+                $scope.showMessage("Error: " + message, "bg-danger");
+            }
+        });
+    };
+
+    $scope.submitClass = function submitClass(){
+        return ($scope.markers.length == 0) ? "" : "btn-primary";
+    };
+
+    $scope.showMessage = function showMessage(msg, cls, hide){
+        $scope.message = msg;
+        $scope.messageClass = cls;
+        $scope.$apply();
+        var msgSurround = $(".msgSurround").slideDown();
+
+        if(hide){
+            setTimeout(function(){
+                msgSurround.slideUp();
+            }, 3000)
+        }
+    };
+
+    window.$scope = $scope;
 
     google.maps.event.addDomListener(window, 'load', $scope.initMap);
 });
