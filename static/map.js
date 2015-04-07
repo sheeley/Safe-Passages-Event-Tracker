@@ -19,7 +19,7 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
         $scope.$apply();
     };
 
-    $scope.remove = function removeMarker(marker){
+    $scope.removeMarker = function removeMarker(marker){
         var index = $scope.markers.indexOf(marker);
         if(!marker || index == -1 || !confirm("Remove this marker?")){
             return;

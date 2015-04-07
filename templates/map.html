@@ -29,42 +29,38 @@
         <div class="col-md-6"><div id="map-canvas"></div></div>
         <div class="col-md-6">
             <form>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Marker #</th>
-                            <th>Type</th>
-                            <th># of People</th>
-                            <th>Notes</th>
-                            <th>Remove</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat="marker in markers">
-                            <td>
-                                {[{marker.labelContent}]}
-                                <input type="hidden" name="pos[{[{marker.labelContent}]}]" value="{[{marker.position}]}"/>
+                <div ng-repeat="marker in markers" ng-if="markers">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <input type="hidden" name="pos[{[{marker.labelContent}]}]" value="{[{marker.position.k}]},{[{marker.position.D}]}"/>
+                                <button class="btn btn-default btn-xs pull-right" ng-click="removeMarker(marker)"><i class="glyphicon glyphicon-remove"></i></button>
+                                <label for="type[{[{marker.labelContent}]}]">Marker {[{marker.labelContent}]}</label>
+                                    <select id="type[{[{marker.labelContent}]}]" class="form-control" name="type[{[{marker.labelContent}]}]">
+                                        <option value="D">D &mdash; drug use, sales, paraphenalia</option>
+                                        <option value="E">E &mdash; fighting, bullying, yelling, public disturbance</option>
+                                        <option value="H">H &mdash; harassment, cat-calling, sexual solicitations</option>
+                                        <option value="L">L &mdash; loitering, individual blocking sidewalk, please include # of people</option>
+                                        <option value="P">P &mdash; feces, urine, vomit</option>
+                                        <option value="V">V &mdash; violence, weapons, threat of violence</option>
+                                        <option value="T">T &mdash; traffic violations or unsafe driving</option>
+                                        <option value="X">X &mdash; police presence or activity</option>
+                                        <option value="O">O &mdash; other, please add comment</option>
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="ta[{[{marker.labelContent}]}]">Comment</label>
+                                <textarea id="ta[{[{marker.labelContent}]}]" name="comment[{[{marker.labelContent}]}]" class="form-control" placeholder="Any relevant information, including number of people involved"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row"><div class="col-md-12"><hr/></div></div>
 
-                            </td>
-                            <td>
-                                <select class="form-control" name="type[{[{marker.labelContent}]}]">
-                                    <option value="D">D (drug use, sales, paraphenalia)</option>
-                                    <option value="E">E (fighting, bullying, yelling, public disturbance)</option>
-                                    <option value="H">H (harassment, cat-calling, sexual solicitations)</option>
-                                    <option value="L">L (loitering, individual blocking sidewalk, please include # of people)</option>
-                                    <option value="P">P (feces, urine, vomit)</option>
-                                    <option value="V">V (violence, weapons, threat of violence)</option>
-                                    <option value="T">T (traffic violations or unsafe driving)</option>
-                                    <option value="X">X (police presence or activity)</option>
-                                    <option value="O">O (other, please add comment)</option>
-                                </select>
-                            </td>
-                            <td><input type="number" name="people[{[{marker.labelContent}]}]"/></td>
-                            <td><input type="text" name="comment[{[{marker.labelContent}]}]"/></td>
-                            <td><a ng-click="removeMarker(marker)">Remove</a>
-                        </tr>
-                    </tbody>
-                </table>
                 <div class="form-group">
                     <label for="contact">Name/Email</label>
                     <input type="email" class="form-control" id="contact" placeholder="Enter email/name">
