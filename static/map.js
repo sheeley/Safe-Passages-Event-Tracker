@@ -103,6 +103,7 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
         }
 
         $.post("/save", payload, function(data){
+            console.log("uhm");
             if(data && data.success){
                 for (var i = $scope.markers.length - 1; i >= 0; i--) {
                     $scope.markers[i].setMap(null);
