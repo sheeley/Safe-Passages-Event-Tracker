@@ -54,6 +54,25 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
 
         $scope.map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
         google.maps.event.addListener($scope.map, 'click', $scope.addEvent);
+
+        if(window.events){
+            $scope.addViewEvents(events);
+        }
+    };
+
+    $scope.addViewEvents = function addViewEvents(events){
+        for (var i = events.length - 1; i >= 0; i--) {
+            var e = events[i];
+            $scope.markers.push(new MarkerWithLabel({
+                position: new google.maps.LatLng(e.latitude, e.longitude),
+                url: '/',
+                animation: google.maps.Animation.DROP,
+                map: $scope.map,
+                labelContent: e.event_type,
+                labelAnchor: new google.maps.Point(22, 0),
+                labelClass: 'labels'
+            }));
+        };
     };
 
     $scope.getValidationMessages = function getValidationMessages(){
@@ -98,22 +117,28 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
             conditions: $scope.conditions,
             starting: $scope.starting,
             ending: $scope.ending,
-            date: $scope.date,
+            date: $scope.date.toUTCString(),
             events: $scope.getMarkersForSubmit()
-        }
+        };
 
-        $.post("/save", payload, function(data){
-            console.log("uhm");
-            if(data && data.success){
-                for (var i = $scope.markers.length - 1; i >= 0; i--) {
-                    $scope.markers[i].setMap(null);
-                };
-                $scope.markers = [];
-                $scope.label = 1;
-                $scope.showMessage("Saved!", "bg-success", true);
-            } else {
-                message = (data && data.message) ? data.message : "";
-                $scope.showMessage("Error: " + message, "bg-danger");
+        $.ajax({
+            type: "POST",
+            url: "/save",
+            processData: false,
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(data) {
+                if(data && data.success){
+                    for (var i = $scope.markers.length - 1; i >= 0; i--) {
+                        $scope.markers[i].setMap(null);
+                    };
+                    $scope.markers = [];
+                    $scope.label = 1;
+                    $scope.showMessage("Saved!", "bg-success", true);
+                } else {
+                    message = (data && data.message) ? data.message : "";
+                    $scope.showMessage("Error: " + message, "bg-danger");
+                }
             }
         });
     };

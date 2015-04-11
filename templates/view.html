@@ -1,0 +1,50 @@
+
+<script type="text/javascript">
+    var events = {{events_json|safe}},
+    reports = {{reports_json|safe}},
+    total = {{total}};
+</script>
+
+<div ng-app="mapApp" ng-controller="MapCtrl">
+    <style type="text/css">
+        #map-canvas {
+            width: 100%;
+            background: #000;
+            min-height: 200px;
+            height:100%;
+        }
+
+        .container {
+            height: 100%;
+        }
+
+        .labels {
+            color: red;
+            background-color: white;
+            font-family: "Lucida Grande", "Arial", sans-serif;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            width: 20px;
+            border: 1px solid black;
+            white-space: nowrap;
+        }
+
+        form .ng-invalid-required {
+            border: 1px solid red;
+        }
+
+        div.msgSurround {
+            display: none;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+    </style>
+    <div class="row"><div class="col-md-12"><h1>View</h1></div></div>
+    <div class="row"><div class="col-md-12"><div id="map-canvas"></div></div></div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed&key={{key}}"></script>
+    <script src="http://google-maps-utility-library-v3.googlecode.com/svn/tags/markerwithlabel/1.1.9/src/markerwithlabel_packed.js"></script>
+    <script src="static/map.js"></script>
+</div>

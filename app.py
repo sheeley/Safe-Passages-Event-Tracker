@@ -1,9 +1,8 @@
 from flask import Flask, render_template, jsonify, request
 from flask.ext.sqlalchemy import SQLAlchemy
-import geoalchemy
-from geoalchemy.postgis import PGComparator
 from datetime import datetime
 from os import environ
+from json import loads, dumps
 
 
 class Config(object):
@@ -11,10 +10,15 @@ class Config(object):
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = environ['DATABASE_URL']
+env_db = environ.get('DATABASE_URL')
+if env_db:
+    app.config['SQLALCHEMY_DATABASE_URI'] = env_db
+else:
+    # just assume dev, who cares
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
 
-TIME_FORMAT = "%a %b %d %Y %H:%M:%S"
+TIME_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
 
 
 # API
@@ -35,22 +39,25 @@ def add_form():
 @app.route("/save", methods=['POST'])
 def post_save():
     '''Save a report'''
-    form = request.form
     success = False
     message = None
     try:
-        success = save(form)
+        data = loads(request.data)
+        success = save(data)
     except Exception as e:
         app.logger.error(e)
         message = str(e)
     return jsonify({"success": success, "message": message})
 
 
-@app.route("/list")
-def list_existing():
-    reports, total = view()
-    list_html = render_template("list.html", reports=reports, total=total)
-    return render(list_html)
+@app.route("/view")
+def view():
+    reports, total = load_reports()
+    events_json = dumps([e.to_dict() for e in load_events_for_reports(reports)])
+    reports_json = dumps([r.to_dict() for r in reports])
+
+    view_html = render_template("view.html", reports_json=reports_json, total=total, events_json=events_json)
+    return render(view_html)
 
 
 # Service
@@ -61,23 +68,25 @@ def save(form):
     starting = form.get('starting')
     ending = form.get('ending')
     input_date = form.get('date')
-    date = datetime.strptime(input_date[:len(TIME_FORMAT)+3], TIME_FORMAT)
-    report = Report(email, conditions, starting, ending, date)
+    date = datetime.strptime(input_date, TIME_FORMAT)
 
+    report = Report(email, conditions, starting, ending, date)
     db.session.add(report)
-    for f_event in form.getlist('events[]'):
+
+    for f_event in form.get('events'):
         event_type = f_event.get('type')
         latitude = f_event.get('k')
         longitude = f_event.get('d')
         comment = f_event.get('comment')
-        db.session.add(Event(event_type, latitude, longitude, comment, report))
 
+        db.session.add(Event(event_type, latitude, longitude, comment, report))
     db.session.commit()
+
     return True
 
 
-def view(page=0, event_type=None, limit=50, reporter=None,
-         start_date=None, end_date=None):
+def load_reports(page=0, limit=50, event_type=None, reporter=None,
+                 start_date=None, end_date=None):
     offset = page * limit
     query = Report.query
     filters = {
@@ -89,9 +98,19 @@ def view(page=0, event_type=None, limit=50, reporter=None,
     filters = {k: v for k, v in filters.iteritems() if v}
     if filters:
         query = query.filter_by(**filters)
-    results = query.order_by("ID DESC").limit(limit).offset(offset).all()
     total = query.count()
-    return results, total
+
+    query = query.order_by("ID DESC")
+    query = query.limit(limit)
+    query = query.offset(offset)
+
+    return query.all(), total
+
+
+def load_events_for_reports(reports):
+    report_ids = [r.id for r in reports]
+    query = Event.query.filter(Event.id.in_(report_ids))
+    return query.all()
 
 
 # DB Models
@@ -103,8 +122,6 @@ class Report(db.Model):
     starting = db.Column(db.String(120))
     ending = db.Column(db.String(120))
     date = db.Column(db.DateTime())
-    events = db.relationship('Event',
-                             backref=db.backref('report'))
 
     def __init__(self, email, conditions, starting, ending, date):
         self.reporter = self.munge_email(email)
@@ -120,44 +137,52 @@ class Report(db.Model):
         at_pos = email.index("@")
         return email[:2] + "..." + email[at_pos:]
 
-
-class Geography(geoalchemy.Geometry):
-    """Subclass of `Geometry` that stores a `Geography Type`_.
-
-      Defaults to storing a point.  Call with `specific=False` if you don't
-      want to define the geography type it stores, or specify using
-      `geography_type='POLYGON'`, etc.
-
-      _`Geography Type`: http://postgis.refractions.net/docs/ch04.html#PostGIS_Geography
-    """
-
-    @property
-    def name(self):
-        if not self.kwargs.get('specific', True):
-            return 'GEOGRAPHY'
-        geography_type = self.kwargs.get('geography_type', 'POINT')
-        srid = self.kwargs.get('srid', 4326)
-        return 'GEOGRAPHY(%s,%d)' % (geography_type, srid)
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'reporter': self.reporter,
+            'conditions': self.conditions,
+            'starting': self.starting,
+            'ending': self.ending,
+            'date': self.date.isoformat()
+        }
 
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_type = db.Column(db.String(1))
-    location = geoalchemy.GeometryColumn(Geography(2), comparator=PGComparator)
+    latitude = db.Column(db.Float())
+    longitude = db.Column(db.Float())
     comment = db.Column(db.String(500))
+
+    report_id = db.Column(db.Integer, db.ForeignKey('report.id'))
+    report = db.relationship('Report',
+                             backref=db.backref('events', lazy='dynamic'))
+
     report_id = db.Column(db.Integer, db.ForeignKey('report.id'))
 
     def __init__(self, event_type, latitude, longitude, comment, report):
         self.event_type = event_type
-        self.location = "POINT(%0.8f %0.8f)" % (longitude, latitude)
+        self.latitude = latitude
+        self.longitude = longitude
         self.comment = comment
-        self.report_id = report.id
+        self.report = report
 
     def __repr__(self):
-        return '<Report %r>' % self.id
+        return '<Event %r>' % self.id
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'event_type': self.event_type,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'report_id': self.report_id,
+            'comment': self.comment
+        }
 
 if __name__ == "__main__":
-    print db.drop_all()
-    print db.create_all()
+    # print db.drop_all()
+    # print db.create_all()
 
     app.run(debug=True)
