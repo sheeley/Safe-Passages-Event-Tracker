@@ -3,9 +3,15 @@ from flask.ext.sqlalchemy import SQLAlchemy
 import geoalchemy
 from geoalchemy.postgis import PGComparator
 from datetime import datetime
+from os import environ
+
+
+class Config(object):
+    DB_PATH = ""
+
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = environ['DATABASE_URL']
 db = SQLAlchemy(app)
 
 TIME_FORMAT = "%a %b %d %Y %H:%M:%S"
@@ -64,7 +70,6 @@ def save(form):
         latitude = f_event.get('k')
         longitude = f_event.get('d')
         comment = f_event.get('comment')
-        # events.append
         db.session.add(Event(event_type, latitude, longitude, comment, report))
 
     db.session.commit()
@@ -138,13 +143,13 @@ class Geography(geoalchemy.Geometry):
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_type = db.Column(db.String(1))
-    # location = geoalchemy.GeometryColumn(Geography(2), comparator=PGComparator)
+    location = geoalchemy.GeometryColumn(Geography(2), comparator=PGComparator)
     comment = db.Column(db.String(500))
     report_id = db.Column(db.Integer, db.ForeignKey('report.id'))
 
     def __init__(self, event_type, latitude, longitude, comment, report):
         self.event_type = event_type
-        # self.location = "POINT(%0.8f %0.8f)" % (longitude, latitude)
+        self.location = "POINT(%0.8f %0.8f)" % (longitude, latitude)
         self.comment = comment
         self.report_id = report.id
 
@@ -152,7 +157,7 @@ class Event(db.Model):
         return '<Report %r>' % self.id
 
 if __name__ == "__main__":
-    # print db.drop_all()
-    # print db.create_all()
+    print db.drop_all()
+    print db.create_all()
 
     app.run(debug=True)
