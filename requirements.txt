@@ -3,3 +3,4 @@ gunicorn==19.3.0
 sqlalchemy==0.8.4
 Flask-SQLAlchemy==2.0
 geoalchemy==0.7.2
+psycopg2==2.6
