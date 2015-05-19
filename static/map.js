@@ -11,7 +11,7 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
 
     $scope.addEvent = function addEvent(sq){
         $scope.markers.push(new MarkerWithLabel({
-            position: new google.maps.LatLng(sq.latLng.k, sq.latLng.D),
+            position: new google.maps.LatLng(sq.latLng.A, sq.latLng.F),
             url: '/',
             animation: google.maps.Animation.DROP,
             map: $scope.map,
