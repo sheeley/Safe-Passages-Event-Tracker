@@ -51,15 +51,28 @@
                                 <label for="type[{[{marker.labelContent}]}]">Marker {[{marker.labelContent}]} Type*</label>
                                     <select id="type[{[{marker.labelContent}]}]" class="form-control" ng-model="marker.type" required="required">
                                         <option value="">Type</option>
-                                        <option value="D">D &mdash; drug use, sales, paraphenalia</option>
-                                        <option value="E">E &mdash; fighting, bullying, yelling, public disturbance</option>
-                                        <option value="H">H &mdash; harassment, cat-calling, sexual solicitations</option>
-                                        <option value="L">L &mdash; loitering, individual blocking sidewalk, please include # of people</option>
-                                        <option value="P">P &mdash; feces, urine, vomit</option>
-                                        <option value="V">V &mdash; violence, weapons, threat of violence</option>
-                                        <option value="T">T &mdash; traffic violations or unsafe driving</option>
-                                        <option value="X">X &mdash; police presence or activity</option>
-                                        <option value="O">O &mdash; other, please add comment</option>
+                                        <optgroup label="Incidents">
+                                            <option value="A">A &mdash; alcohol use</option>
+                                            <option value="D">D &mdash; drug use, sales, paraphenalia</option>
+                                            <option value="E">E &mdash; fighting, bullying, yelling, public disturbance</option>
+                                            <option value="H">H &mdash; harassment, cat-calling, sexual solicitations</option>
+                                            <option value="L">L &mdash; loitering, individual blocking sidewalk, please include # of people</option>
+                                            <option value="P">P &mdash; feces, urine, vomit</option>
+                                            <option value="V">V &mdash; violence, weapons, threat of violence</option>
+                                            <option value="T">T &mdash; traffic violations or unsafe driving</option>
+                                            <option value="X">X &mdash; police presence or activity</option>
+                                            <option value="O">O &mdash; other, please add comment</option>
+                                        </optgroup>
+                                        <optgroup label="Assets">
+                                            <option value="AA">A &mdash; Assisting behaviors, helping, caring, interventions</option>
+                                            <option value="AB">B &mdash; Beautification, cleaning, decorating, art</option>
+                                            <option value="AC">C &mdash; Community connections, positive gatherings</option>
+                                            <option value="AN">N &mdash; Nature, greenery, trees, potted plants, flowers</option>
+                                            <option value="AO">O &mdash; Organizations, social services, desired businesses</option>
+                                            <option value="AR">R &mdash; Recreation, kids playing, people exercising</option>
+                                            <option value="AS">AS &mdash; Positive social interactions, friendliness, signs of respect</option>
+                                            <option value="AOO">OO &mdash; Other</option>
+                                        </optgroup>
                                     </select>
                             </div>
                         </div>
@@ -67,8 +80,16 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="form-group">
+                                <label for="pi[{[{marker.labelContent}]}]">People Involved</label>
+                                <input type="number" id="pi[{[{marker.labelContent}]}]" ng-model="model.people_involved" class="form-control" placeholder="Number of people involved."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
                                 <label for="ta[{[{marker.labelContent}]}]">Comment</label>
-                                <textarea id="ta[{[{marker.labelContent}]}]" ng-model="model.comment" class="form-control" placeholder="Any relevant information, including number of people involved"></textarea>
+                                <textarea id="ta[{[{marker.labelContent}]}]" ng-model="model.comment" class="form-control" placeholder="Any relevant information."></textarea>
                             </div>
                         </div>
                     </div>
@@ -76,10 +97,10 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label for="contact">Email* (only stores first 2 characters and domain, like sh...@gmail.com)</label>
                     <input type="email" class="form-control" id="contact" placeholder="Enter email/name" ng-model="email" required="required" autocomplete="on"/>
-                </div>
+                </div> -->
 
                 <div class="form-group">
                     <label for="date">Date &amp; Time*</label>

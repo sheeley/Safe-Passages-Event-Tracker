@@ -11,11 +11,14 @@ class Config(object):
 
 app = Flask(__name__)
 env_db = environ.get('DATABASE_URL')
+drop_and_create_db = False
+
 if env_db:
     app.config['SQLALCHEMY_DATABASE_URI'] = env_db
 else:
     # just assume dev, who cares
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+    drop_and_create_db = True
 db = SQLAlchemy(app)
 
 TIME_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
@@ -78,8 +81,9 @@ def save(form):
         latitude = f_event.get('k')
         longitude = f_event.get('d')
         comment = f_event.get('comment')
+        people_involved = f_event.get('people_involved')
 
-        db.session.add(Event(event_type, latitude, longitude, comment, report))
+        db.session.add(Event(event_type, latitude, longitude, people_involved, comment, report))
     db.session.commit()
 
     return True
@@ -134,8 +138,11 @@ class Report(db.Model):
         return '<Report %r>' % self.id
 
     def munge_email(self, email):
-        at_pos = email.index("@")
-        return email[:2] + "..." + email[at_pos:]
+        try:
+            at_pos = email.index("@")
+            return email[:2] + "..." + email[at_pos:]
+        except Exception:
+            return "no email"
 
     def to_dict(self):
         return {
@@ -154,6 +161,7 @@ class Event(db.Model):
     latitude = db.Column(db.Float())
     longitude = db.Column(db.Float())
     comment = db.Column(db.String(500))
+    people_involved = db.Column(db.Integer)
 
     report_id = db.Column(db.Integer, db.ForeignKey('report.id'))
     report = db.relationship('Report',
@@ -161,10 +169,11 @@ class Event(db.Model):
 
     report_id = db.Column(db.Integer, db.ForeignKey('report.id'))
 
-    def __init__(self, event_type, latitude, longitude, comment, report):
+    def __init__(self, event_type, latitude, longitude, people_involved, comment, report):
         self.event_type = event_type
         self.latitude = latitude
         self.longitude = longitude
+        self.people_involved = people_involved
         self.comment = comment
         self.report = report
 
@@ -178,11 +187,13 @@ class Event(db.Model):
             'latitude': self.latitude,
             'longitude': self.longitude,
             'report_id': self.report_id,
-            'comment': self.comment
+            'comment': self.comment,
+            'people_involved': self.people_involved
         }
 
 if __name__ == "__main__":
-    # print db.drop_all()
-    # print db.create_all()
+    if drop_and_create_db:
+        print db.drop_all()
+        print db.create_all()
 
     app.run(debug=True)

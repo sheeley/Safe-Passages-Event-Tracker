@@ -87,9 +87,9 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
             };
         }
 
-        if(!$scope.email){
-            messages.push("include your email address");
-        }
+        // if(!$scope.email){
+        //     messages.push("include your email address");
+        // }
 
         if(messages.length){
             return "Please " + messages.join(" and ") + " before submitting.";
@@ -105,7 +105,8 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
                 k: marker.position.k,
                 d: marker.position.D,
                 type: marker.type,
-                comment: marker.comment
+                comment: marker.comment,
+                people_involved: marker.people_involved
             });
         };
         return markers;
@@ -113,7 +114,7 @@ angular.module('mapApp', []).config(function($interpolateProvider) {
 
     $scope.submit = function submit(){
         var payload = {
-            email: $scope.email,
+            email: "asdf", // $scope.email,
             conditions: $scope.conditions,
             starting: $scope.starting,
             ending: $scope.ending,
