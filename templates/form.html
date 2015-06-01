@@ -1,0 +1,91 @@
+<form ng-submit="submit($event)" ng-app="mapApp" ng-controller="MapCtrl">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Log</h1>
+            <p>Tap the map to log events. Inputs marked with * are required.</p>
+            <div class="msgSurround {[{messageClass}]}"><p class="msg">{[{message}]}</p></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {% include "map.html" %}
+            <div ng-repeat="marker in markers" ng-if="markers.length">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <button class="btn btn-default btn-xs pull-right" ng-click="removeMarker(marker)"><i class="glyphicon glyphicon-remove"></i></button>
+                            <label for="type[{[{marker.labelContent}]}]">Marker {[{marker.labelContent}]} Type*</label>
+                                <select id="type[{[{marker.labelContent}]}]" class="form-control" ng-model="marker.type" required="required">
+                                    <optgroup label="{[{group.label}]}" ng-repeat="group in eventTypes">
+                                        <option value="{[{option.key}]}" ng-repeat="option in group.values">{[{option.value}]}</option>
+                                    </optgroup>
+                                </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="pi[{[{marker.labelContent}]}]">People Involved</label>
+                            <input type="number" id="pi[{[{marker.labelContent}]}]" ng-model="model.people_involved" class="form-control" placeholder="Number of people involved."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="ta[{[{marker.labelContent}]}]">Comment</label>
+                            <textarea id="ta[{[{marker.labelContent}]}]" ng-model="model.comment" class="form-control" placeholder="Any relevant information."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row"><div class="col-md-12"><hr/></div></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <!-- <div class="form-group">
+                <label for="contact">Email* (only stores first 2 characters and domain, like sh...@gmail.com)</label>
+                <input type="email" class="form-control" id="contact" placeholder="Enter email/name" ng-model="email" required="required" autocomplete="on"/>
+            </div> -->
+
+            <div class="form-group">
+                <label for="date">Date &amp; Time*</label>
+
+                <p class="input-group">
+                    <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date" close-text="Close" is-open="startOpened"/>
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ng-click="open($event, 'start')"><i class="glyphicon glyphicon-calendar"></i></button>
+                    </span>
+                </p>
+
+                <timepicker ng-model="date"></timepicker>
+            </div>
+
+            <div class="form-group">
+                <label for="conditions">Weather/Notable Conditions</label>
+                <input type="text" class="form-control" id="conditions" ng-model="conditions">
+            </div>
+
+            <div class="form-group">
+                <label for="start">Starting Point</label>
+                <input type="text" class="form-control" id="start" ng-model="start">
+            </div>
+
+            <div class="form-group">
+                <label for="end">Ending Point</label>
+                <input type="text" class="form-control" id="end" ng-model="end">
+            </div>
+
+            <div class="form-group">
+                <label for="association">Volunteer Type/Association</label>
+                <input type="text" class="form-control" id="association" ng-model="association"/>
+            </div>
+
+            <div class="form-group">
+                <p class="help-block" ng-if="getValidationMessages()">{[{getValidationMessages()}]}</p>
+                <input type="submit" value="Submit!" class="btn {[{submitClass()}]}"/>
+            </div>
+
+        </div>
+    </div>
+</form>

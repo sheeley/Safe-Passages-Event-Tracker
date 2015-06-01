@@ -1,24 +1,28 @@
+"""
+Running in dev:
+python app.py
+
+If you want to create a new db when you run:
+DROP_CREATE=true python app.py
+"""
 from flask import Flask, render_template, jsonify, request
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy.schema import Index
 from datetime import datetime
 from os import environ
 from json import loads, dumps
 
 
-class Config(object):
-    DB_PATH = ""
-
-
 app = Flask(__name__)
 env_db = environ.get('DATABASE_URL')
-drop_and_create_db = False
+drop_and_create_db = environ.get('DROP_CREATE')
 
 if env_db:
     app.config['SQLALCHEMY_DATABASE_URI'] = env_db
+    drop_and_create_db = False
 else:
     # just assume dev, who cares
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
-    drop_and_create_db = True
 db = SQLAlchemy(app)
 
 TIME_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
@@ -35,7 +39,7 @@ def render(content):
 def add_form():
     '''Render the map view to add a report'''
     key = "AIzaSyAF_o9iMtsGlET7yYVhAWoLFsRGBU9ge4o"
-    content = render_template("map.html", key=key)
+    content = render_template("form.html", key=key)
     return render(content)
 
 
@@ -55,12 +59,42 @@ def post_save():
 
 @app.route("/view")
 def view():
-    reports, total = load_reports()
-    events_json = dumps([e.to_dict() for e in load_events_for_reports(reports)])
-    reports_json = dumps([r.to_dict() for r in reports])
-
-    view_html = render_template("view.html", reports_json=reports_json, total=total, events_json=events_json)
+    view_html = render_template("view.html")
     return render(view_html)
+
+
+@app.route("/view-json")
+def view_json():
+    event_types = request.args.get('event_types', '').split(',')
+    start_date = request.args.get('start', None)
+    end_date = request.args.get('end', None)
+    page = int(request.args.get('page', 1)) - 1
+    limit = int(request.args.get('limit', 50))
+
+    start_date = datetime.strptime(start_date, TIME_FORMAT) if start_date else None
+    end_date = datetime.strptime(end_date, TIME_FORMAT) if end_date else None
+
+    report_resp, total = load_reports(page=page, limit=limit, event_types=event_types,
+                                      start_date=start_date, end_date=end_date)
+    reports = []
+    events = []
+    if report_resp:
+        reports = [r for r in report_resp]
+        report_map = {r.id: r for r in reports} if reports else {}
+        events = load_events_for_reports(reports) if reports else []
+
+    for e in events:
+        report = report_map.get(e.report_id)
+        if not report.events:
+            report_map = []
+
+        report.events.append(e)
+
+    return jsonify({
+        "events": [e.to_dict() for e in events],
+        "reports": [r.to_dict() for r in reports],
+        "total": total
+    })
 
 
 # Service
@@ -71,37 +105,53 @@ def save(form):
     starting = form.get('starting')
     ending = form.get('ending')
     input_date = form.get('date')
+    association = form.get('association')
+    events = form.get('events')
+
+    if not events:
+        raise Exception("Please include events")
+
     date = datetime.strptime(input_date, TIME_FORMAT)
 
-    report = Report(email, conditions, starting, ending, date)
+    report = Report(email, conditions, starting, ending, date, association)
+    if not report.is_valid():
+        raise Exception('Report not valid. {}'.format(report))
+
     db.session.add(report)
 
-    for f_event in form.get('events'):
+    for f_event in events:
         event_type = f_event.get('type')
         latitude = f_event.get('k')
         longitude = f_event.get('d')
         comment = f_event.get('comment')
         people_involved = f_event.get('people_involved')
+        event = Event(event_type, latitude, longitude, people_involved, comment, report)
+        if event.is_valid():
+            db.session.add(event)
+        else:
+            raise Exception('Event {} is not valid'.format(event))
 
-        db.session.add(Event(event_type, latitude, longitude, people_involved, comment, report))
     db.session.commit()
 
     return True
 
 
-def load_reports(page=0, limit=50, event_type=None, reporter=None,
+def load_reports(page=0, limit=50, event_types=None, reporter=None,
                  start_date=None, end_date=None):
     offset = page * limit
     query = Report.query
-    filters = {
-        "type": event_type,
-        "reporter": reporter,
-        "start_date": start_date,
-        "end_date": end_date
-    }
-    filters = {k: v for k, v in filters.iteritems() if v}
-    if filters:
-        query = query.filter_by(**filters)
+
+    if start_date:
+        query = query.filter(Report.date >= start_date)
+
+    if end_date:
+        query = query.filter(Report.date <= end_date)
+
+    if event_types:
+        # TODO - will actually require rewriting how these queries are performed
+        pass
+        # query = query.filter(.type.in_((123,456))
+
     total = query.count()
 
     query = query.order_by("ID DESC")
@@ -122,20 +172,22 @@ def load_events_for_reports(reports):
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reporter = db.Column(db.String(120))
-    conditions = db.Column(db.String(120))
+    conditions = db.Column(db.String(2000))
     starting = db.Column(db.String(120))
     ending = db.Column(db.String(120))
-    date = db.Column(db.DateTime())
+    date = db.Column(db.DateTime(), index=True)
+    association = db.Column(db.String(255))
 
-    def __init__(self, email, conditions, starting, ending, date):
+    def __init__(self, email, conditions, starting, ending, date, association):
         self.reporter = self.munge_email(email)
         self.conditions = conditions
         self.starting = starting
         self.ending = ending
         self.date = date
+        self.association = association
 
     def __repr__(self):
-        return '<Report %r>' % self.id
+        return '<Report {} {}>'.format(self.id, self.date)
 
     def munge_email(self, email):
         try:
@@ -151,13 +203,19 @@ class Report(db.Model):
             'conditions': self.conditions,
             'starting': self.starting,
             'ending': self.ending,
-            'date': self.date.isoformat()
+            'date': self.date.strftime("%B %-d, %Y"),
+            'association': self.association,
+            'events': [e.to_dict() for e in self.events] if self.events else []
         }
+
+    def is_valid(self):
+        if self.date:
+            return True
 
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    event_type = db.Column(db.String(1))
+    event_type = db.Column(db.String(3))
     latitude = db.Column(db.Float())
     longitude = db.Column(db.Float())
     comment = db.Column(db.String(500))
@@ -178,7 +236,11 @@ class Event(db.Model):
         self.report = report
 
     def __repr__(self):
-        return '<Event %r>' % self.id
+        return '<Event {}: {} ({}, {}) report: {}>'.format(self.id,
+                                                           self.event_type,
+                                                           self.latitude,
+                                                           self.longitude,
+                                                           self.report_id)
 
     def to_dict(self):
         return {
@@ -190,6 +252,15 @@ class Event(db.Model):
             'comment': self.comment,
             'people_involved': self.people_involved
         }
+
+    def is_valid(self):
+        required = [self.event_type, self.latitude, self.longitude, self.report]
+        for prop in required:
+            if not prop:
+                return False
+        return True
+
+Index('event_type_index', Event.report_id, Event.event_type)
 
 if __name__ == "__main__":
     if drop_and_create_db:

@@ -1,5 +1,5 @@
-# Safe-Streets-Event-Tracker
-A method for tracking incidents that occur during Safe Streets shifts. 
+# Safe Passages Event Tracker
+A method for tracking incidents that occur during Safe Passages roaming shifts. 
 
 Go to https://safestreets.herokuapp.com/ to use.
 

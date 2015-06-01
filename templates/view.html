@@ -1,50 +1,84 @@
-
 <script type="text/javascript">
-    var events = {{events_json|safe}},
-    reports = {{reports_json|safe}},
-    total = {{total}};
+    var viewOnly = true;
 </script>
+<div class="row"><div class="col-md-12"><h1>View</h1></div></div>
+{% include "map.html" %}
+
+<div class="row"><h2>Reports</h2></div>
 
 <div ng-app="mapApp" ng-controller="MapCtrl">
-    <style type="text/css">
-        #map-canvas {
-            width: 100%;
-            background: #000;
-            min-height: 200px;
-            height:100%;
-        }
+    <div class="row form-inline">
+        <div class="form-group">
+            <label for="exampleInputName2">Start Date</label>
+            <p class="input-group">
+              <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="startDate" close-text="Close" is-open="startOpened"/>
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="open($event, 'start')"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+            </p>
+        </div>
 
-        .container {
-            height: 100%;
-        }
+        <div class="form-group">
+            <label for="exampleInputName2">End Date</label>
+            <p class="input-group">
+              <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="date" ng-required="true" close-text="Close" is-open="endOpened"/>
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="open($event, 'end')"><i class="glyphicon glyphicon-calendar"></i></button>
+              </span>
+            </p>
+        </div>
 
-        .labels {
-            color: red;
-            background-color: white;
-            font-family: "Lucida Grande", "Arial", sans-serif;
-            font-size: 10px;
-            font-weight: bold;
-            text-align: center;
-            width: 20px;
-            border: 1px solid black;
-            white-space: nowrap;
-        }
+        <!-- TODO <div class="form-group buttons">
+            <span class="dropdown" dropdown on-toggle="toggled(open)">
+                <a href class="btn btn-info dropdown-toggle" dropdown-toggle>
+                    Event Types
+                </a>
+                <ul class="dropdown-menu">
+                    <li ng-repeat="option in allEventValues">
+                        <label><input type="checkbox" value="{[{option.key}]}" ng-model="selectedEventTypes[option.key]"> {[{option.value}]}</label>
+                    </li>
+                </ul>
+            </span>
+        </div> -->
 
-        form .ng-invalid-required {
-            border: 1px solid red;
-        }
+        <div class="form-group buttons">
+            <a href class="btn btn-primary" ng-click="applyFilters($event)">Apply</a>
+        </div>
 
-        div.msgSurround {
-            display: none;
-            padding: 15px;
-            margin-bottom: 10px;
-        }
 
-    </style>
-    <div class="row"><div class="col-md-12"><h1>View</h1></div></div>
-    <div class="row"><div class="col-md-12"><div id="map-canvas"></div></div></div>
+    </div>
+    <div class="row" ng-if="total">
+        <p>{[{reports.length}]} of {[{total}]}</p>
+        <table class="table">
+            <thead><!-- <th>ID</th> --><th>Date</th><th>Conditions</th><th>Association</th><th>Events</th></thead>
+            <tbody ng-repeat="report in reports">
+                <!-- <td>{[{report.id}]}</td> -->
+                <td>{[{report.date}]}</td>
+                <td>{[{report.conditions}]}</td>
+                <td>{[{report.association}]}</td>
+                <td>{[{report.events.length}]}</td>
+            </tbody>
+        </table>
+        <p>{[{reports.length}]} of {[{total}]}</p>
 
-    <script src="https://maps.googleapis.com/maps/api/js?sensor=false&extension=.js&output=embed&key={{key}}"></script>
-    <script src="http://google-maps-utility-library-v3.googlecode.com/svn/tags/markerwithlabel/1.1.9/src/markerwithlabel_packed.js"></script>
-    <script src="static/map.js"></script>
+        <pagination total-items="total" ng-model="currentPage" ng-change="pageChanged()"></pagination>
+    </div>
+    <div class="row" ng-if="!total">
+        <div class="md-col-12"><p>No reports found for these filters</p></div>
+    </div>
+
 </div>
+<style type="text/css">
+    .dropdown-menu {
+        max-height: 200px;
+        overflow: auto;
+        width: 300px;
+    }
+
+    .dropdown-menu li {
+        margin: 0 5px;
+    }
+    .buttons {
+        margin: -10px 0 0 10px;
+    }
+</style>
