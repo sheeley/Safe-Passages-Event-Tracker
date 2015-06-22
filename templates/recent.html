@@ -1,0 +1,25 @@
+
+{% if recents %}
+<table class="table">
+    <thead>
+        <th>ID</th>
+        <th>Date</th>
+        <th>Conditions</th>
+        <th>Association</th>
+    </thead>
+    <tbody>
+    {% for recent in recents %}
+    <tr>
+        <td>{{recent.id}}</td>
+        <td>{{recent.date}}</td>
+        <td>{{recent.conditions}}</td>
+        <td>{{recent.association}}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+<p>
+Total reports: {{total}}
+</p>

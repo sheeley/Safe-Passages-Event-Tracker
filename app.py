@@ -97,6 +97,12 @@ def view_json():
     })
 
 
+@app.route("/recent")
+def view_recent():
+    recents, total = load_reports(limit=10)
+    return render(render_template("recent.html", recents=recents, total=total))
+
+
 # Service
 
 def save(form):
